@@ -1,0 +1,30 @@
+{
+  "rules": [
+    {
+      "ruleId": "high_amount_rule",
+      "ruleName": "大额交易检测",
+      "ruleType": "AMOUNT",
+      "threshold": 5000,
+      "action": "VERIFY",
+      "description": "检测金额超过5000元的交易"
+    },
+    {
+      "ruleId": "frequency_rule", 
+      "ruleName": "高频交易检测",
+      "ruleType": "FREQUENCY",
+      "threshold": 10,
+      "timeWindow": 60,
+      "action": "WARN",
+      "description": "检测1分钟内交易次数超过10次的用户"
+    },
+    {
+      "ruleId": "device_rule",
+      "ruleName": "异常设备检测", 
+      "ruleType": "DEVICE",
+      "threshold": 3,
+      "timeWindow": 360,
+      "action": "BLOCK",
+      "description": "检测6小时内设备关联用户数超过3个"
+    }
+  ]
+}
