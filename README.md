@@ -19,7 +19,7 @@
 
 ## 🏗 系统架构
 
-数据源 → Flink实时处理 → 规则引擎 → 风险决策 → 可视化展示
+订单数据 → Kafka → Flink实时处理 → 规则引擎 → Redis缓存 → 风险结果 → Kafka → 监控系统
 
 text
 
@@ -56,6 +56,45 @@ vue
 <script setup>
 import { RiskChart } from './components/RiskChart.vue';
 </script>
+
+### 组件详细说明
+
+#### 1. Apache Kafka - 消息队列
+- **作用**: 作为事件总线，解耦数据生产者和消费者
+- **关键配置**:
+  - 主题: `order_events` (订单事件), `risk_events` (风险事件)
+  - 分区数: 4 (根据业务量调整)
+  - 副本数: 2 (保证高可用)
+
+#### 2. Apache Flink - 流处理引擎
+- **作用**: 实时处理订单事件流
+- **处理能力**:
+  - 支持Exactly-Once语义
+  - 支持状态管理和检查点
+  - 支持事件时间处理
+- **性能指标**: 可处理10k+事件/秒
+
+#### 3. Redis - 缓存和状态存储
+- **作用**:
+  - 存储风控规则 (Hash结构)
+  - 缓存用户风险评分
+  - 存储处理状态
+- **数据结构**:
+  - `risk:rules:hash`: 存储所有规则
+  - `risk:rules:active`: 活跃规则集合
+  - `risk:scores:{userId}:{deviceId}`: 风险评分
+
+#### 4. 监控体系
+- **Prometheus**: 收集指标数据
+- **Grafana**: 可视化监控面板
+- **ELK Stack**: 日志收集和分析
+
+### 高可用设计
+- **Kafka集群**: 多Broker部署
+- **Flink集群**: JobManager + TaskManager架构
+- **Redis哨兵**: 主从复制和故障转移
+- **负载均衡**: Nginx反向代理
+
 🔧 核心模块
 1. 规则引擎 (RuleEngine)
 异步并行规则评估
