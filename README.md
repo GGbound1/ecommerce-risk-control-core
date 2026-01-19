@@ -1,158 +1,297 @@
-# 🛡️ 电商实时风控系统核心组件
+🛡️ 电商实时风控系统核心组件
+https://img.shields.io/badge/Java-17-blue
+https://img.shields.io/badge/Spring%2520Boot-3.0-green
+https://img.shields.io/badge/Vue%25203-Composition%2520API-brightgreen
+https://img.shields.io/badge/Apache%2520Flink-1.16-orange
 
-[![Java](https://img.shields.io/badge/Java-17-blue)](https://www.java.com/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.0-green)](https://spring.io/)
-[![Vue 3](https://img.shields.io/badge/Vue%203-Composition%20API-brightgreen)](https://vuejs.org/)
-[![Flink](https://img.shields.io/badge/Apache%20Flink-1.16-orange)](https://flink.apache.org/)
+一个高性能的电商实时风控系统核心组件库，提供规则引擎、机器学习风险评估、实时风险处理和可视化监控能力。
 
-一个高性能的电商实时风控系统核心组件库，提供规则引擎、实时风险处理和可视化监控能力。
+✨ 核心特性
+🚀 高性能规则引擎 - 支持并行规则评估，QPS可达10k+，支持Redis原子操作和规则热更新
 
-注意：文件中只含有核心内容
+⚡ 实时风险监控 - 基于Apache Flink的流式处理，毫秒级响应，支持Stream数据结构和事件时间处理
 
-## ✨ 核心特性
+🧠 机器学习集成 - 集成线性回归模型进行智能风险评估，支持多维度特征提取和个性化评估
 
-- 🚀 **高性能规则引擎** - 支持并行规则评估，QPS可达10k+
-- ⚡ **实时风险监控** - 基于Apache Flink的流式处理，毫秒级响应
-- 🎯 **动态规则管理** - 支持规则热更新和实时生效
-- 📊 **多维度可视化** - 丰富的风险数据分析和监控看板
-- 🔧 **模块化架构** - 高度可扩展的插件化设计
+📊 多维度可视化 - 丰富的风险数据分析和监控看板，支持用户风险画像和行为模式分析
 
-## 🏗 系统架构
+🔧 模块化架构 - 高度可扩展的插件化设计，支持SPI规则加载和协调器机制
 
-订单数据 → Kafka → Flink实时处理 → 规则引擎 → Redis缓存 → 风险结果 → Kafka → 监控系统
+🔄 在线学习 - 实时风险评分更新，基于Redis的渐进式风险学习
 
+🏗 系统架构
 text
+订单数据 → Kafka → Flink实时处理 → 
+├─ 规则引擎评估（基础规则 + 机器学习） → 风险评估结果
+├─ 图分析引擎 → 关联关系检测
+├─ 在线学习模型 → 风险评分更新
+└─ Redis Stream持久化 → Spring Boot API → 监控系统
+📦 快速开始
+环境要求
+Java 17+
 
-## 📦 快速开始
+Apache Flink 1.16+
 
-### 环境要求
-- Java 17+
-- Apache Flink 1.16+
-- Redis 7.0+
-- Node.js 18+
+Redis 7.0+（支持Stream数据结构）
 
-### 后端核心使用
-```java
-// 初始化规则引擎
+Spring Boot 3.0+
+
+MySQL 8.0+
+
+后端核心使用
+java
+// 初始化风控系统
 JedisPool jedisPool = new JedisPool("localhost", 6379);
 OnlineLearningModel onlineModel = new OnlineLearningModel(jedisPool);
+MLRiskPredictor mlPredictor = new MLRiskPredictor(jedisPool);
 RuleEngine ruleEngine = new RuleEngine(jedisPool, onlineModel);
 
 // 创建订单事件
 OrderEvent order = new OrderEvent();
 order.setOrderId("order_123");
 order.setUserId("user_456"); 
-order.setAmount(999.0);
+order.setAmount(1500.0);
+order.setDeviceId("device_789");
+order.setIp("192.168.1.100");
 
 // 执行风险评估
 CompletableFuture<RiskEvent> result = ruleEngine.evaluateAsync(order);
 RiskEvent riskEvent = result.get(5, TimeUnit.SECONDS);
+
+// 获取用户风险画像
+Map<String, Object> profile = riskController.getUserRiskProfile("user_456");
 前端组件使用
 vue
 <template>
-  <RiskChart type="line" :data="trendData" title="风险事件趋势"/>
+  <RiskDashboard>
+    <RiskChart type="line" :data="trendData" title="风险事件趋势"/>
+    <UserProfilePanel :userId="currentUserId"/>
+    <StrategyConfigPanel @update="handleStrategyUpdate"/>
+  </RiskDashboard>
 </template>
 
 <script setup>
-import { RiskChart } from './components/RiskChart.vue';
+import { RiskChart, UserProfilePanel, StrategyConfigPanel } from './components';
 </script>
-
-### 组件详细说明
-
-#### 1. Apache Kafka - 消息队列
-- **作用**: 作为事件总线，解耦数据生产者和消费者
-- **关键配置**:
-  - 主题: `order_events` (订单事件), `risk_events` (风险事件)
-  - 分区数: 4 (根据业务量调整)
-  - 副本数: 2 (保证高可用)
-
-#### 2. Apache Flink - 流处理引擎
-- **作用**: 实时处理订单事件流
-- **处理能力**:
-  - 支持Exactly-Once语义
-  - 支持状态管理和检查点
-  - 支持事件时间处理
-- **性能指标**: 可处理10k+事件/秒
-
-#### 3. Redis - 缓存和状态存储
-- **作用**:
-  - 存储风控规则 (Hash结构)
-  - 缓存用户风险评分
-  - 存储处理状态
-- **数据结构**:
-  - `risk:rules:hash`: 存储所有规则
-  - `risk:rules:active`: 活跃规则集合
-  - `risk:scores:{userId}:{deviceId}`: 风险评分
-
-#### 4. 监控体系
-- **Prometheus**: 收集指标数据
-- **Grafana**: 可视化监控面板
-- **ELK Stack**: 日志收集和分析
-
-### 高可用设计
-- **Kafka集群**: 多Broker部署
-- **Flink集群**: JobManager + TaskManager架构
-- **Redis哨兵**: 主从复制和故障转移
-- **负载均衡**: Nginx反向代理
-
 🔧 核心模块
 1. 规则引擎 (RuleEngine)
-异步并行规则评估
+异步并行规则评估：支持CompletableFuture异步执行
 
-动态规则热加载
+动态规则热加载：基于Redis的规则存储和实时更新
 
-高性能规则匹配
+高性能规则匹配：使用不可变规则快照保证一致性
 
-2. 在线学习模型 (OnlineLearningModel)
-实时风险评分更新
+机器学习集成：规则评估与机器学习评分结合
 
-基于Redis的原子操作
+规则变更监听：Redis Pub/Sub实时通知机制
 
-渐进式风险学习
+2. 机器学习风险评估器 (MLRiskPredictor)
+多维度特征提取：金额、频率、设备、IP、时间五维度评分
 
-3. Flink实时处理
-毫秒级风险识别和处理流水线
+线性回归模型：基于Apache Commons Math实现
 
-4. 前端可视化组件
-丰富的风险监控和数据分析组件
+用户个性化偏差：基于用户历史行为的风险调整
+
+模型持久化：Redis存储和热加载支持
+
+实时预测：毫秒级风险评估响应
+
+3. 在线学习模型 (OnlineLearningModel)
+实时风险评分更新：基于订单事件和规则结果
+
+原子性操作：Lua脚本保证Redis操作原子性
+
+异步更新机制：线程池处理不影响主流程
+
+渐进式学习：持续优化风险评分模型
+
+4. Flink实时处理
+流式处理流水线：Kafka消费 → 规则评估 → Redis存储
+
+状态管理：基于Flink状态API的规则统计
+
+错误处理：死信队列和异常恢复机制
+
+性能优化：并行处理和异步I/O
+
+5. Spring Boot后端服务
+RESTful API：完整的风控管理接口
+
+配置管理：风险策略、API配置集中管理
+
+用户认证：JWT token认证机制
+
+异常处理：统一异常处理和结果封装
+
+数据脱敏：用户信息脱敏处理
+
+6. 规则协调器 (RuleCoordinator)
+并行执行优化：多规则并行评估
+
+插件化架构：SPI服务加载机制
+
+运行时管理：规则执行上下文协调
+
+错误隔离：单规则失败不影响其他规则
+
+📊 系统功能
+风险控制API
+风险评估：POST /api/risk/assess - 订单风险评估
+
+风险策略：GET/POST /api/risk/strategy - 策略管理和查询
+
+用户画像：GET /api/risk/profile/{userId} - 用户风险画像
+
+规则管理：GET/POST/PUT/DELETE /api/rules - 规则CRUD操作
+
+事件查询：GET /api/events - 风险事件分页查询
+
+数据统计API
+数据看板：GET /api/stats - 风险数据统计
+
+趋势分析：GET /api/trend - 风险趋势分析
+
+分布统计：GET /api/distribution - 事件类型分布
+
+实时监控：GET /api/recent - 最近风险事件
+
+系统管理API
+用户认证：POST /api/auth/login - 用户登录
+
+用户注册：POST /api/auth/register - 用户注册
+
+异常管理：GET/POST /api/exception/* - 异常记录管理
+
+系统配置：GET/POST /api/system/api-config - API配置管理
+
+🛠️ 技术实现
+数据处理流程
+数据接入：Kafka接收订单事件流
+
+实时处理：Flink作业进行流式处理
+
+规则评估：并行执行基础规则和机器学习评估
+
+结果存储：Redis Stream存储风险事件
+
+API服务：Spring Boot提供数据查询和管理接口
+
+存储设计
+Redis数据结构：
+
+risk:rules:hash：规则定义存储
+
+risk:rules:active：活跃规则集合
+
+risk:event:stream：风险事件Stream
+
+risk:structured_events：风险事件List（兼容）
+
+ml:model:{userId}：用户机器学习模型
+
+MySQL存储：用户信息、异常记录等持久化数据
+
+性能优化
+缓存策略：Redis多级缓存，热点数据内存化
+
+异步处理：CompletableFuture异步执行，线程池优化
+
+连接池管理：Jedis连接池、数据库连接池优化
+
+序列化优化：FastJSON序列化，减少网络传输
+
+批量操作：Redis管道和批量操作减少RTT
+
+🔧 配置指南
+应用配置
+yaml
+# application.yml
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/risk_control
+    username: root
+    password: password
+  
+  redis:
+    host: 192.168.56.101
+    port: 6379
+    password: 123456
+    lettuce:
+      pool:
+        max-active: 50
+        max-idle: 20
+        min-idle: 5
+
+jwt:
+  secret: your-jwt-secret-key
+  expiration: 86400000
+
+risk:
+  strategy:
+    mlEnabled: true
+    thresholds:
+      block: 80.0
+      review: 70.0
+      verify: 50.0
+      warning: 40.0
+    featureWeights:
+      amount: 0.3
+      frequency: 0.25
+      device: 0.2
+      ip: 0.15
+      time: 0.1
+    autoLearn:
+      enabled: true
+      sampleSize: 1000
+      retrainInterval: 3600
+Flink作业配置
+java
+// Flink作业启动参数
+env.setParallelism(8);
+env.enableCheckpointing(60000);
+env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+env.getCheckpointConfig().setMinPauseBetweenCheckpoints(30000);
+🚀 部署方案
+开发环境
+bash
+# 启动Redis
+redis-server --requirepass 123456
+
+# 启动Kafka
+bin/kafka-server-start.sh config/server.properties
+
+# 启动Flink作业
+./bin/flink run -c com.ec.risk.model.RealTimeRiskControlJob risk-control-job.jar
+
+# 启动Spring Boot应用
+mvn spring-boot:run
+生产环境建议
+高可用架构：
+
+Redis集群（哨兵模式）
+
+Kafka集群（多副本）
+
+Flink集群（高可用配置）
+
+负载均衡（Nginx/Haproxy）
+
+监控告警：
+
+Prometheus + Grafana监控
+
+ELK日志收集
+
+告警规则配置
+
+性能优化：
+
+JVM参数调优
+
+连接池配置优化
+
+缓存策略优化
 
 📄 许可证
 MIT License - 查看 LICENSE 文件了解详情。
 
-text
-
-### 4. `docs/architecture.md`
-```markdown
-# 系统架构设计
-
-## 整体架构
-
-本系统采用微服务架构，主要包含以下组件：
-
-### 核心引擎层
-- **RuleEngine**: 规则评估引擎
-- **OnlineLearningModel**: 在线学习模型
-- **RuleCoordinator**: 规则协调器
-
-### 数据处理层  
-- **Flink Job**: 实时流处理
-- **Redis**: 缓存和规则存储
-- **Kafka**: 消息队列
-
-### 前端展示层
-- **Vue 3**: 前端框架
-- **Element Plus**: UI组件库
-- **ECharts**: 数据可视化
-
-## 技术选型理由
-
-### 后端技术栈
-- **Java 17**: 成熟的生态系统和性能
-- **Spring Boot 3**: 快速开发和微服务支持
-- **Apache Flink**: 强大的流处理能力
-- **Redis**: 高性能缓存和数据结构
-
-### 前端技术栈
-- **Vue 3**: 响应式和组合式API
-- **TypeScript**: 类型安全和开发体验
-- **Element Plus**: 丰富的UI组件
