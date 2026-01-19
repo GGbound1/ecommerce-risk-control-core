@@ -263,6 +263,12 @@ com.ec.risk
 ├── service       # 业务服务层
 └── utils         # 工具类
 ```
+##部分功能展示：
+<img width="415" height="213" alt="image" src="https://github.com/user-attachments/assets/ec248874-fdbe-4776-8bc0-da8c737ec79f" />
+<img width="415" height="211" alt="image" src="https://github.com/user-attachments/assets/fbd8e7ae-7731-4a75-8284-15a62a1f70f8" />
+<img width="415" height="248" alt="image" src="https://github.com/user-attachments/assets/8c1152e5-e720-4e3a-8527-e6914b5d576d" />
+<img width="416" height="249" alt="image" src="https://github.com/user-attachments/assets/5210d24c-400d-460a-ba8e-bed40c44aadf" />
+
 
 ## 许可证
 MIT License - 查看 LICENSE 文件了解详情。
